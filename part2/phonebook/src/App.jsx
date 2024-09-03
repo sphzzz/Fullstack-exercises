@@ -5,6 +5,8 @@ import Person from './Person.jsx'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
+import personService from './personService'
+
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
@@ -12,10 +14,10 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')  // Fetching the initial data from the server
-      .then(response => {
-        setPersons(response.data)
+    personService
+      .getAll()
+      .then(initialPersons => {
+        setPersons(initialPersons)
       })
   }, [])
 
@@ -33,20 +35,50 @@ const App = () => {
 
   const addPerson = (event) => {
     event.preventDefault()
+    const existingPerson = persons.find(person => person.name === newName)
     const newPerson = { name: newName, number: newNumber }
 
-    if (persons.some(person => person.name === newName)) {
-      alert(`${newName} is already added to phonebook`)
+    if (existingPerson) {
+      const confirmUpdate = window.confirm(
+        `${newName} is already in the phonebook, replace the old number with a new one?`
+      )
+      if (confirmUpdate) {
+        personService
+          .update(existingPerson.id, newPerson)
+          .then(returnedPerson => {
+            setPersons(persons.map(person =>
+              person.id !== existingPerson.id ? person : returnedPerson
+            ))
+            setNewName('')
+            setNewNumber('')
+          })
+          .catch(error => {
+            console.error("There was an error updating the person!", error)
+          })
+      }
     } else {
-      axios
-        .post('http://localhost:3001/persons', newPerson)
-        .then(response => {
-          setPersons(persons.concat(response.data))
+      personService
+        .create(newPerson)
+        .then(returnedPerson => {
+          setPersons(persons.concat(returnedPerson))
           setNewName('')
           setNewNumber('')
         })
         .catch(error => {
           console.error("There was an error adding the person!", error)
+        })
+    }
+  }
+
+  const handleDelete = (id, name) => {
+    if (window.confirm(`Delete ${name}?`)) {
+      personService
+        .remove(id)
+        .then(() => {
+          setPersons(persons.filter(person => person.id !== id))
+        })
+        .catch(error => {
+          console.error("There was an error deleting the person!", error)
         })
     }
   }
@@ -73,7 +105,7 @@ const App = () => {
 
       <h3>Numbers</h3>
 
-      <Persons personsToShow={personsToShow} />
+      <Persons personsToShow={personsToShow} handleDelete={handleDelete} />
     </div>
   )
 }
