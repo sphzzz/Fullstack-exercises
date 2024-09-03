@@ -4,7 +4,7 @@ import Persons from'./Persons.jsx'
 import Person from './Person.jsx'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-
+import Notification from'./Notification.jsx'
 import personService from './personService'
 
 const App = () => {
@@ -12,6 +12,7 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [notification, setNotification] = useState({ message: '', type: '' })
 
   useEffect(() => {
     personService
@@ -33,6 +34,13 @@ const App = () => {
     setSearchTerm(event.target.value)
   }
 
+  const showNotification = (message, type) => {
+    setNotification({ message, type })
+    setTimeout(() => {
+      setNotification({ message: '', type: '' })
+    }, 5000) 
+  }
+
   const addPerson = (event) => {
     event.preventDefault()
     const existingPerson = persons.find(person => person.name === newName)
@@ -51,6 +59,7 @@ const App = () => {
             ))
             setNewName('')
             setNewNumber('')
+            showNotification(`Updated ${newName}'s number`, 'success')
           })
           .catch(error => {
             console.error("There was an error updating the person!", error)
@@ -63,6 +72,7 @@ const App = () => {
           setPersons(persons.concat(returnedPerson))
           setNewName('')
           setNewNumber('')
+          showNotification(`Added ${newName}`, 'success')
         })
         .catch(error => {
           console.error("There was an error adding the person!", error)
@@ -76,6 +86,7 @@ const App = () => {
         .remove(id)
         .then(() => {
           setPersons(persons.filter(person => person.id !== id))
+          showNotification(`Deleted ${name}`, 'success')
         })
         .catch(error => {
           console.error("There was an error deleting the person!", error)
@@ -90,6 +101,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+
+      <Notification message={notification.message} type={notification.type} />
 
       <Filter searchTerm={searchTerm} handleSearchChange={handleSearchChange} />
 
