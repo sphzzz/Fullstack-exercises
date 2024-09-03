@@ -1,9 +1,7 @@
 import Filter from'./Filter.jsx'
 import PersonForm from './Personform.jsx'
 import Persons from'./Persons.jsx'
-import Person from './Person.jsx'
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import Notification from'./Notification.jsx'
 import personService from './personService'
 
@@ -62,7 +60,11 @@ const App = () => {
             showNotification(`Updated ${newName}'s number`, 'success')
           })
           .catch(error => {
-            console.error("There was an error updating the person!", error)
+            showNotification(
+              `Error: Information of ${newName} has already been removed from the server`,
+              'error'
+            )
+            setPersons(persons.filter(person => person.id !== existingPerson.id))
           })
       }
     } else {
@@ -75,7 +77,10 @@ const App = () => {
           showNotification(`Added ${newName}`, 'success')
         })
         .catch(error => {
-          console.error("There was an error adding the person!", error)
+          showNotification(
+            `Error: Could not add ${newName}. Please try again.`,
+            'error'
+          )
         })
     }
   }
@@ -89,7 +94,11 @@ const App = () => {
           showNotification(`Deleted ${name}`, 'success')
         })
         .catch(error => {
-          console.error("There was an error deleting the person!", error)
+          showNotification(
+            `Error: Information of ${name} has already been removed from the server`,
+            'error'
+          )
+          setPersons(persons.filter(person => person.id !== id))
         })
     }
   }
