@@ -2,6 +2,17 @@ const express = require('express')
 const app = express()
 const currentDate = new Date();
 app.use(express.json())
+const morgan = require('morgan');
+morgan.token('body', (req) => {
+  if (req.method === 'POST') {
+    return JSON.stringify(req.body);
+  }
+  return '';
+});
+
+
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
+
 
 const options = {
     timeZoneName: 'short'
@@ -31,7 +42,6 @@ let persons = [
     }
 
 ]
-
 app.get('/info', (request, response) => {
   response.send(
     'Phonebook has info for ' + persons.length + ` people<br>` + 
@@ -65,11 +75,11 @@ const generateId = () => {
 app.post('/api/persons', (request, response) => {
   const body = request.body
 
-/*    if (!body.name || !body.number) {
+    if (!body.name || !body.number) {
     return response.status(400).json({ 
       error: 'name or number missing' 
     })
-  }  */
+  }  
 
   if (persons.some(person => person.name === body.name)) {
     return response.status(400).json({ 
