@@ -1,91 +1,103 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+const api_key = import.meta.env.VITE_WEATHER_API_KEY;
 
-const App = () => {
-  const [searchIndex, setSearchIndex] = useState('');
-  const [countries, setCountries] = useState([]);
-  const [filteredCountries, setFilteredCountries] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState(null); 
+
+
+function Country({data: {name, capital, population, flags, languages}}) {
+  const [weather, setWeather] = useState({});
 
   useEffect(() => {
     axios
-      .get('https://studies.cs.helsinki.fi/restcountries/api/all')
+      .get(
+        `https://api.openweathermap.org/data/2.5/weather?q=${capital.toString()}&appid=${api_key}&units=imperial`
+      )
       .then((response) => {
-        setCountries(response.data);
-      })
-      .catch((error) => console.log('Error fetching data:', error));
+        setWeather(response.data);
+      });
+    return () => setWeather({});
+  }, [capital]);
+
+  return (
+    <>
+      <h1>{name["common"]}</h1>
+      <p>capital {capital}</p>
+      <p>population {population}</p>
+      <h3>Spoken languages</h3>
+      <ul>
+        {Object.keys(languages).map((key, i) => (
+          <li key={i}>{languages[key]}</li>
+        ))}
+      </ul>
+      <img src={flags["png"]} alt={name["common"]} width="100px" />
+      {Object.keys(weather).length !== 0 && (
+        <>
+          <h2>Weather in {capital}</h2>
+          <p>
+            <strong>temperature:</strong> {weather.main["temp"]} Fahrenheit
+          </p>
+          <img
+            src={`https://openweathermap.org/img/w/${weather.weather[0].icon}.png`}
+            alt={weather.weather[0].description}
+          />
+          <p>
+            <strong>wind:</strong> {weather.wind["speed"]} mph direction{" "}
+            {weather.wind["deg"]} degrees
+          </p>
+        </>
+      )}
+    </>
+  );
+}
+
+function App() {
+  const [country, setCountry] = useState("");
+  const [countries, setCountries] = useState([]);
+  const [countriesFilter, setCountriesFilter] = useState([]);
+  const [showCountry, setShowCountry] = useState({});
+
+  useEffect(() => {
+    axios.get("https://restcountries.com/v3.1/all").then((response) => {
+      setCountries(response.data);
+    });
   }, []);
 
-  const handleCountryChange = (event) => {
-    setSearchIndex(event.target.value);
-    setSelectedCountry(null); 
+  useEffect(() => {
+    setShowCountry(countriesFilter.length === 1 ? {...countriesFilter[0]} : {});
+  }, [countriesFilter]);
 
-    const filtered = countries.filter((country) =>
-      country.name.common.toLowerCase().includes(event.target.value.toLowerCase())
-    );
-    
-    setFilteredCountries(filtered);
-  };
-
-  const handleShowCountry = (country) => {
-    console.log(`Showing details for: ${country.name.common}`); 
-    setSelectedCountry(country);
-  };
-
-  const renderCountryDetails = (country) => {
-    const languages = Object.values(country.languages);
-    return (
-      <div>
-        <h2>{country.name.common}</h2>
-        <p><strong>Capital:</strong> {country.capital}</p>
-        <p><strong>Area:</strong> {country.area} km²</p>
-        <p><strong>Languages:</strong></p>
-        <ul>
-          {languages.map((language, index) => (
-            <li key={index}>{language}</li>
-          ))}
-        </ul>
-        <img src={country.flags.svg} alt={`Flag of ${country.name.common}`} width="150" />
-      </div>
+  const searchCountry = (e) => {
+    setCountry(e.target.value);
+    setCountriesFilter(
+      countries.filter(
+        (country) =>
+          country.name.common.toLowerCase().search(e.target.value.toLowerCase()) !== -1
+      )
     );
   };
-
-  const showResult = () => {
-    if (selectedCountry) {
-      return renderCountryDetails(selectedCountry);
-    }
-
-    if (filteredCountries.length > 10) {
-      return <p>Too many matches, please be more specific.</p>;
-    }
-    
-    if (filteredCountries.length > 1 && filteredCountries.length <= 10) {
-      return (
-        <ul>
-          {filteredCountries.map((country) => (
-            <li key={country.cca3}>
-              {country.name.common} 
-              <button onClick={() => handleShowCountry(country)}>Show</button>
-            </li>
-          ))}
-        </ul>
-      );
-    }
-
-    if (filteredCountries.length === 1) {
-      return renderCountryDetails(filteredCountries[0]);
-    }
-
-    return <p>No matches found.</p>;
+  const showCountries = () => {
+    return countriesFilter.map((country, i) => (
+      <p key={i}>
+        {country.name["common"]}
+        <button onClick={() => setShowCountry(country)}>show</button>
+      </p>
+    ));
   };
 
   return (
-    <div>
-      <label>Find countries: </label>
-      <input value={searchIndex} onChange={handleCountryChange} /><br />
-      {showResult()}
-    </div>
+    <>
+      <p>
+        find countries <input value={country} onChange={searchCountry} />
+      </p>
+      {countriesFilter.length > 10 ? (
+        <p>Too many matches, specify another filter</p>
+      ) : (
+        showCountries()
+      )}
+      {showCountry.name && <Country data={showCountry} />}
+    </>
   );
-};
+}
 
 export default App;
+
