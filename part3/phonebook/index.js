@@ -23,15 +23,30 @@ app.get('/api/persons', (request, response) => {
   });
 });
 
-// Fetch a person by id
+// GET a specific person by ID (now using the database)
 app.get('/api/persons/:id', (request, response, next) => {
-  Person.findById(request.params.id)
+  const id = request.params.id;
+
+  Person.findById(id)
     .then(person => {
       if (person) {
         response.json(person);
       } else {
-        response.status(404).end();
+        response.status(404).json({ error: 'person not found' });
       }
+    })
+    .catch(error => next(error));  // Handle invalid ObjectId errors
+});
+
+// GET /info route (now using the database)
+app.get('/info', (request, response, next) => {
+  Person.countDocuments({})
+    .then(count => {
+      const currentDate = new Date();
+      response.send(
+        `<p>Phonebook has info for ${count} people</p>
+         <p>${currentDate}</p>`
+      );
     })
     .catch(error => next(error));
 });
