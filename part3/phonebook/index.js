@@ -1,4 +1,5 @@
 const express = require('express');
+require('dotenv').config();
 const app = express();
 const cors = require('cors');
 const morgan = require('morgan');
@@ -56,10 +57,29 @@ app.post('/api/persons', (request, response, next) => {
     })
     .catch(error => next(error));
 });
+// PUT (update) a person
+app.put('/api/persons/:id', (request, response, next) => {
+  const { name, number } = request.body;
 
+  if (!name || !number) {
+    return response.status(400).json({ error: 'name or number missing' });
+  }
+
+  const updatedPerson = { name, number };
+
+  Person.findByIdAndUpdate(request.params.id, updatedPerson, { new: true, runValidators: true, context: 'query' })
+    .then(updatedPerson => {
+      if (updatedPerson) {
+        response.json(updatedPerson);
+      } else {
+        response.status(404).json({ error: 'person not found' });
+      }
+    })
+    .catch(error => next(error));
+});
 // Delete a person
 app.delete('/api/persons/:id', (request, response, next) => {
-  Person.findByIdAndRemove(request.params.id)
+  Person.findByIdAndDelete(request.params.id)
     .then(() => {
       response.status(204).end();
     })
