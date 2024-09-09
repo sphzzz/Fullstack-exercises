@@ -1,9 +1,12 @@
+/* eslint-disable no-undef */
 require('dotenv').config()
 
-const PORT = process.env.PORT || 3003
-const MONGO_URL = process.env.MONGO_URL || 'mongodb+srv://shanpeihao:sph980417@cluster0.ek5my.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+const PORT = process.env.PORT
+const MONGODB_URI = process.env.NODE_ENV === 'test'
+? process.env.TEST_MONGODB_URI
+: process.env.MONGODB_URI
 
 module.exports = {
-  PORT,
-  MONGO_URL
+	MONGODB_URI,
+	PORT
 }

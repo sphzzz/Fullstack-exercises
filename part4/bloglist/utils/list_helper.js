@@ -1,75 +1,78 @@
-// utils/list_helper.js
+const _ = require("lodash")
 
-const dummy = (blogs) => {
-  return 1
+const dummy = () => {
+	return  1
 }
 
 const totalLikes = (blogs) => {
-  return blogs.reduce((sum, blog) => sum + blog.likes, 0)
+	const reducer = (sum, item) => {
+		return sum + item
+	}
+
+	const blogsLikes = blogs.map(blogs => blogs.likes)
+  
+	return blogsLikes.reduce(reducer, 0)
 }
 
 const favoriteBlog = (blogs) => {
-  if (blogs.length === 0) {
-    return null
-  }
-  
-  const favorite = blogs.reduce((prev, current) => {
-    return (prev.likes > current.likes) ? prev : current
-  })
+	const blogsLikes = blogs.map(blogs => blogs.likes)
+	const largestIndex = blogsLikes.indexOf(Math.max(...blogsLikes))
+	const largestinfo = blogs[largestIndex]
 
-  return {
-    title: favorite.title,
-    author: favorite.author,
-    likes: favorite.likes
-  }
+	return {
+		title: largestinfo.title,
+		author: largestinfo.author,
+		likes: largestinfo.likes,
+	}
 }
 
 const mostBlogs = (blogs) => {
-  if (blogs.length === 0) {
-    return null
-  }
+	const blogsAuthor = blogs.map(blogs => blogs.author)
+	
+	let mode = 
+		_.chain(blogsAuthor)
+			.countBy()
+			.entries()
+			.maxBy(_.last)
+			.thru(_.head)
+			.value();
 
-  const authorBlogCounts = blogs.reduce((counts, blog) => {
-    counts[blog.author] = (counts[blog.author] || 0) + 1
-    return counts
-  }, {})
+	let count = 0;
 
-  const topAuthor = Object.keys(authorBlogCounts).reduce((top, author) => {
-    return authorBlogCounts[author] > authorBlogCounts[top] ? author : top
-  })
-
-  return {
-    author: topAuthor,
-    blogs: authorBlogCounts[topAuthor]
-  }
+	blogsAuthor.forEach(element => {
+  		if (element === mode) {
+    	count += 1;
+		}
+	})
+	
+	return {
+		author: mode,
+		blogs: count,
+	}
 }
 
-// Function to find the author with the most likes
 const mostLikes = (blogs) => {
-  if (blogs.length === 0) {
-    return null
-  }
+	const groupedBlogs = _.groupBy(blogs, 'author')
+	const countedAuthors = _.map(groupedBlogs, (arr) => { 
+		return { 
+			author: arr[0].author, 
+			likes: _.sumBy(arr, 'likes'), 
+		}; 
+		
+	})
+	const maxLikesAuthor = _.maxBy(countedAuthors, (a) => a.likes)
+	const authorName = _.head(_.values(maxLikesAuthor))
 
-  const authorLikes = blogs.reduce((likes, blog) => {
-    likes[blog.author] = (likes[blog.author] || 0) + blog.likes
-    return likes
-  }, {})
-
-  const topAuthor = Object.keys(authorLikes).reduce((top, author) => {
-    return authorLikes[author] > authorLikes[top] ? author : top
-  })
-
-  return {
-    author: topAuthor,
-    likes: authorLikes[topAuthor]
-  }
+	return {
+		author: authorName,
+		likes: maxLikesAuthor.likes
+	}
 }
-
+  
 module.exports = {
-  dummy,
-  totalLikes,
-  favoriteBlog,
-  mostBlogs,
-  mostLikes
+	dummy,
+	totalLikes,
+	favoriteBlog,
+	mostBlogs,
+	mostLikes
 }
-
