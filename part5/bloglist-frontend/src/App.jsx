@@ -4,6 +4,7 @@ import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Togglable from './components/Togglable'
+import BlogForm from './components/BlogForm'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -13,17 +14,21 @@ const App = () => {
   const [notification, setNotification] = useState(null)
   const [newBlog, setNewBlog] = useState({ title: '', author: '', url: '' })
   const blogFormRef = useRef()
+
   useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
+    blogService.getAll().then(initialBlogs => {
+      setBlogs(initialBlogs);
+    });
+  }, []);
+
+  useEffect(() => {
+    const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser');
     if (loggedUserJSON) {
-      const user = JSON.parse(loggedUserJSON)
-      setUser(user)
-      blogService.setToken(user.token)
-      blogService.getAll().then(blogs =>
-        setBlogs(blogs)
-      )
+      const user = JSON.parse(loggedUserJSON);
+      setUser(user);
+      blogService.setToken(user.token);
     }
-  }, [])
+  }, []);
 
   const handleLogin = async (event) => {
     event.preventDefault()
@@ -58,8 +63,8 @@ const App = () => {
     }, 5000)
   }
 
-  const handleAddBlog = async (event) => {
-    event.preventDefault()
+  const handleAddBlog = async (newBlog) => {
+    //event.preventDefault()
     try {
       const blog = await blogService.create(newBlog)
       setBlogs(blogs.concat(blog))
@@ -75,7 +80,13 @@ const App = () => {
       }, 5000)
     }
   }
-
+  const updateBlog = (updatedBlog) => {
+    setBlogs(blogs.map(blog => blog.id === updatedBlog.id ? updatedBlog : blog));
+  };
+  const removeBlog = (id) => {
+    setBlogs(blogs.filter(blog => blog.id !== id));
+  };
+  const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes);
   if (user === null) {
     return (
       <div>
@@ -112,39 +123,10 @@ const App = () => {
       <Notification message={notification} />
       <p>{user.name} logged in <button onClick={handleLogout}>logout</button></p>
       <Togglable buttonLabel="create new blog" ref={blogFormRef}>
-      <form onSubmit={handleAddBlog}>
-        <div>
-          title
-          <input
-            type="text"
-            value={newBlog.title}
-            name="Title"
-            onChange={({ target }) => setNewBlog({ ...newBlog, title: target.value })}
-          />
-        </div>
-        <div>
-          author
-          <input
-            type="text"
-            value={newBlog.author}
-            name="Author"
-            onChange={({ target }) => setNewBlog({ ...newBlog, author: target.value })}
-          />
-        </div>
-        <div>
-          url
-          <input
-            type="text"
-            value={newBlog.url}
-            name="Url"
-            onChange={({ target }) => setNewBlog({ ...newBlog, url: target.value })}
-          />
-        </div>
-        <button type="submit">create</button>
-      </form>
+      <BlogForm handleAddBlog={handleAddBlog} />
       </Togglable>
       {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} />
+        <Blog key={blog.id} blog={blog} updateBlog={updateBlog} removeBlog={removeBlog} user={user} />
       )}
     </div>
   )
