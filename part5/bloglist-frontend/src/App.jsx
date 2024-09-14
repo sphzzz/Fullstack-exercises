@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import Togglable from './components/Togglable'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -11,7 +12,7 @@ const App = () => {
   const [password, setPassword] = useState('')
   const [notification, setNotification] = useState(null)
   const [newBlog, setNewBlog] = useState({ title: '', author: '', url: '' })
-
+  const blogFormRef = useRef()
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
     if (loggedUserJSON) {
@@ -110,6 +111,7 @@ const App = () => {
       <h2>blogs</h2>
       <Notification message={notification} />
       <p>{user.name} logged in <button onClick={handleLogout}>logout</button></p>
+      <Togglable buttonLabel="create new blog" ref={blogFormRef}>
       <form onSubmit={handleAddBlog}>
         <div>
           title
@@ -140,6 +142,7 @@ const App = () => {
         </div>
         <button type="submit">create</button>
       </form>
+      </Togglable>
       {blogs.map(blog =>
         <Blog key={blog.id} blog={blog} />
       )}
