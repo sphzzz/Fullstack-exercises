@@ -1,0 +1,9 @@
+{
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ],
+    "plugins": [
+      // 可以在这里添加其他插件
+    ]
+  }

@@ -1,5 +1,6 @@
 // src/components/Blog.jsx
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import blogService from '../services/blogs';
 
 const Blog = ({ blog, updateBlog, removeBlog, user }) => {

@@ -29,7 +29,22 @@ const App = () => {
       blogService.setToken(user.token);
     }
   }, []);
+  useEffect(() => {
+    blogService.getAll().then(initialBlogs => {
+      setBlogs(initialBlogs)
+    })
 
+    axios.get('http://localhost:5173/__cypress/assets/favicon.png?v2')
+      .then(response => {
+        // 假设我们需要将图片 URL 设置为 vite.svg
+        const imageUrl = '/vite.svg'
+        console.log('Image URL:', imageUrl)
+        // 你可以在这里处理 imageUrl，例如将其设置为某个状态或直接在组件中使用
+      })
+      .catch(error => {
+        console.error('Error fetching image:', error)
+      })
+  }, [])
   const handleLogin = async (event) => {
     event.preventDefault()
     try {
